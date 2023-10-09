@@ -1,0 +1,63 @@
+List p=18f4520
+    #include<p18f4520.inC>
+    CONFIG OSC = INTIO67
+    CONFIG WDT = OFF
+    org 0x00
+    
+    MOVLF macro number,address
+	MOVLW number
+	MOVWF address 
+	;[address] = number
+    endm
+    
+    MULFF macro addr1, addr2 ;WREG = [addr1] * [addr2]
+	MOVF addr2, W ;WREG = [addr2]
+	MULWF addr1, W ;WREG = [addr1] * WREG([addr2])
+    endm
+    
+    MOVLF 0x01, 0x20 ;[0x20] = a1
+    MOVLF 0x00, 0x21 ;[0x21] = a2
+    MOVLF 0x00, 0x30 ;[0x30] = a3
+    MOVLF 0x01, 0x31 ;[0x31] = a4
+    MOVLF 0x03, 0x22 ;[0x22] = b1
+    MOVLF 0x03, 0x23 ;[0x23] = b2
+    MOVLF 0x01, 0x32 ;[0x32] = b3
+    MOVLF 0x04, 0x33 ;[0x33] = b4
+    
+    RCALL multiply ;call subroutine
+    GOTO finish
+    
+multiply:
+    ;/////////c1/////////
+    MULFF 0x20, 0x22 ;[0x20] * [0x22]
+    MOVFF PRODL, 0x000
+    MULFF 0x21, 0x32 ;[0x21] * [0x32]
+    MOVF PRODL, W ;WREG = PRODL
+    ADDWF 0x00, F ;c1 = [0x20] * [0x22] + [0x21] * [0x32]
+    
+    ;/////////c2/////////
+    MULFF 0x20, 0x23 ;[0x20] * [0x23]
+    MOVFF PRODL, 0x001
+    MULFF 0x21, 0x33 ;[0x21] * [0x33]
+    MOVF PRODL, W ;WREG = PRODL
+    ADDWF 0x01, F ;c2 = [0x20] * [0x23] + [0x21] * [0x33]
+    
+    ;/////////c3/////////
+    MULFF 0x30, 0x22 ;[0x30] * [0x22]
+    MOVFF PRODL, 0x002
+    MULFF 0x31, 0x32 ;[0x31] * [0x32]
+    MOVF PRODL, W ;WREG = PRODL
+    ADDWF 0x02, F ;c3 = [0x30] * [0x22] + [0x31] * [0x32]
+    
+    ;/////////c4/////////
+    MULFF 0x30, 0x23 ;[0x30] * [0x23]
+    MOVFF PRODL, 0x003
+    MULFF 0x31, 0x33 ;[0x31] * [0x33]
+    MOVF PRODL, W ;WREG = PRODL
+    ADDWF 0x03, F ;c4 = [0x30] * [0x23] + [0x31] * [0x33]
+    
+    RETURN
+finish:
+    end
+
+
