@@ -18,11 +18,11 @@ List p=18f4520
     BTFSC TRISB ,0 ;test Multiplier's LSB, skip if 0
 	MOVWF 0x01 ;[0x01] = WREG
 	
-    ;shift Multiplicand left 1bit
+    ;shift Multiplier right 1bit
     RRNCF TRISB
     BCF TRISB, 7 
     
-    ;shift Multiplier right 1bit
+    ;shift Multiplicand left 1bit
     RLNCF TRISA
     BCF TRISA, 0
     
@@ -33,11 +33,11 @@ List p=18f4520
     BTFSC TRISB ,0 ;test Multiplier's LSB, skip if 0
 	MOVWF 0x01 ;[0x01] = WREG
 	
-    ;shift Multiplicand left 1bit
+    ;shift Multiplier right 1bit
     RRNCF TRISB
     BCF TRISB, 7 
     
-    ;shift Multiplier right 1bit
+    ;shift Multiplicand left 1bit
     RLNCF TRISA
     BCF TRISA, 0
     
@@ -48,11 +48,11 @@ List p=18f4520
     BTFSC TRISB ,0 ;test Multiplier's LSB, skip if 0
 	MOVWF 0x01 ;[0x01] = WREG
 	
-    ;shift Multiplicand left 1bit
+    ;shift Multiplier right 1bit
     RRNCF TRISB
     BCF TRISB, 7 
     
-    ;shift Multiplier right 1bit
+    ;shift Multiplicand left 1bit
     RLNCF TRISA
     BCF TRISA, 0
     
@@ -63,11 +63,11 @@ List p=18f4520
     BTFSC TRISB ,0 ;test Multiplier's LSB, skip if 0
 	MOVWF 0x01 ;[0x01] = WREG
 	
-    ;shift Multiplicand left 1bit
+    ;shift Multiplier right 1bit
     RRNCF TRISB
     BCF TRISB, 7 
     
-    ;shift Multiplier right 1bit
+    ;shift Multiplicand left 1bit
     RLNCF TRISA
     BCF TRISA, 0
     
