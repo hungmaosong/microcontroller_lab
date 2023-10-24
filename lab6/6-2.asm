@@ -8,8 +8,8 @@ LIST p=18f4520
     L2	EQU 0x15
     org 0x00
     
-; Total_cycles = 2 + (2 + 7 * num1 + 2) * num2 cycles
-; num1 = 200, num2 = 360, Total_cycles = 505442
+; Total_cycles = 2 + (2 + 8 * num1 + 2) * num2 cycles
+; num1 = 245, num2 = 255, Total_cycles = 500822
 ; Total_delay ~= Total_cycles/1M = 0.5s
 DELAY macro num1, num2 
     local LOOP1         ; innerloop
@@ -20,7 +20,8 @@ DELAY macro num1, num2
 	MOVLW num1          ; 2 cycles
 	MOVWF L1
     LOOP1:
-	NOP                 ; 7 cycles
+	NOP                 ; 8 cycles
+	NOP
 	NOP
 	NOP
 	NOP
@@ -67,7 +68,7 @@ state2:
     BCF LATA, 2
     BCF LATA, 3
     INCF 0x00 ;state counter ++
-    DELAY d'200', d'360' ;delay 0.5s
+    DELAY d'245', d'255' ;delay 0.5s
 end_state2:    
     
     ;test state counter
@@ -81,7 +82,7 @@ state3:
     BCF LATA, 2
     BCF LATA, 3
     INCF 0x00 ;state counter ++
-    DELAY d'200', d'360' ;delay 0.5s
+    DELAY d'245', d'255' ;delay 0.5s
 end_state3:   
     
     ;test state counter
@@ -95,7 +96,7 @@ state4:
     BCF LATA, 1
     BCF LATA, 3
     INCF 0x00 ;state counter ++
-    DELAY d'200', d'360' ;delay 0.5s
+    DELAY d'245', d'255' ;delay 0.5s
 end_state4:  
     
     ;test state counter
@@ -109,7 +110,7 @@ state5:
     BCF LATA, 1
     BCF LATA, 2
     INCF 0x00 ;state counter ++
-    DELAY d'200', d'360' ;delay 0.5s
+    DELAY d'245', d'255' ;delay 0.5s
 end_state5:   
     
     ;test state counter
