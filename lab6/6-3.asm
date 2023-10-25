@@ -8,8 +8,8 @@ LIST p=18f4520
     L2	EQU 0x15
     org 0x00
     
-; Total_cycles = 2 + (2 + 8 * num1 + 2) * num2 cycles
-; num1 = 245, num2 = 255, Total_cycles = 500822
+; Total_cycles = 2 + (2 + 7 * num1 + 2) * num2 *4 cycles
+; num1 = 200, num2 = 90, Total_cycles = 505442
 ; Total_delay ~= Total_cycles/1M = 0.5s
 DELAY macro num1, num2 
     local LOOP1         ; innerloop
@@ -19,8 +19,7 @@ DELAY macro num1, num2
     LOOP2:
 	MOVLW num1          ; 2 cycles
 	MOVWF L1
-    LOOP1:
-	NOP                 ; 8 cycles
+    LOOP1:                ; 7 cycles
 	NOP
 	NOP
 	NOP
@@ -88,7 +87,7 @@ lightoff:
     BCF LATA, 1
     BCF LATA, 2
     BCF LATA, 3
-    DELAY d'245', d'255' ;delay 0.5s
+    DELAY d'200', d'90' ;delay 0.5s
     BRA check_process
     
 lightup1:
@@ -97,7 +96,7 @@ state1:
     BCF LATA, 1
     BCF LATA, 2
     BCF LATA, 3
-    DELAY d'245', d'255' ;delay 0.5s
+    DELAY d'200', d'90' ;delay 0.5s
     BTFSC PORTB, 0 ;check PORTB bit0,skip if bit0=0 ;pull-up resistor
 	BRA end_state1 ;no press button
     BRA check_process2 ;press button
@@ -108,7 +107,7 @@ state2:
     BCF LATA, 0
     BCF LATA, 2
     BCF LATA, 3
-    DELAY d'245', d'255' ;delay 0.5s
+    DELAY d'200', d'90' ;delay 0.5s
     BTFSC PORTB, 0 ;check PORTB bit0,skip if bit0=0 ;pull-up resistor
 	BRA end_state2 ;no press button
     BRA check_process2 ;press button
@@ -119,7 +118,7 @@ state3:
     BCF LATA, 0
     BCF LATA, 1
     BCF LATA, 3
-    DELAY d'245', d'255' ;delay 0.5s
+    DELAY d'200', d'90' ;delay 0.5s
     BTFSC PORTB, 0 ;check PORTB bit0,skip if bit0=0 ;pull-up resistor
 	BRA end_state3 ;no press button
     BRA check_process2 ;press button
@@ -130,7 +129,7 @@ state4:
     BCF LATA, 0
     BCF LATA, 1
     BCF LATA, 2
-    DELAY d'245', d'255' ;delay 0.5s
+    DELAY d'200', d'90' ;delay 0.5s
     BTFSC PORTB, 0 ;check PORTB bit0,skip if bit0=0 ;pull-up resistor
 	BRA end_state4 ;no press button
     BRA check_process2 ;press button
@@ -143,7 +142,7 @@ sec_state1:
     BCF LATA, 0
     BCF LATA, 1
     BCF LATA, 2
-    DELAY d'245', d'255' ;delay 0.5s
+    DELAY d'200', d'90' ;delay 0.5s
     BTFSC PORTB, 0 ;check PORTB bit0,skip if bit0=0 ;pull-up resistor
 	BRA end_sec_state1 ;no press button
     BRA check_process2 ;press button
@@ -154,7 +153,7 @@ sec_state2:
     BCF LATA, 0
     BCF LATA, 1
     BCF LATA, 3
-    DELAY d'245', d'255' ;delay 0.5s
+    DELAY d'200', d'90' ;delay 0.5s
     BTFSC PORTB, 0 ;check PORTB bit0,skip if bit0=0 ;pull-up resistor
 	BRA end_sec_state2 ;no press button
     BRA check_process2 ;press button
@@ -165,7 +164,7 @@ sec_state3:
     BCF LATA, 0
     BCF LATA, 2
     BCF LATA, 3
-    DELAY d'245', d'255' ;delay 0.5s
+    DELAY d'200', d'90' ;delay 0.5s
     BTFSC PORTB, 0 ;check PORTB bit0,skip if bit0=0 ;pull-up resistor
 	BRA end_sec_state3 ;no press button
     BRA check_process2 ;press button
@@ -176,7 +175,7 @@ sec_state4:
     BCF LATA, 1
     BCF LATA, 2
     BCF LATA, 3
-    DELAY d'245', d'255' ;delay 0.5s
+    DELAY d'200', d'90' ;delay 0.5s
     BTFSC PORTB, 0 ;check PORTB bit0,skip if bit0=0 ;pull-up resistor
 	BRA end_sec_state4 ;no press button
     BRA check_process2 ;press button
