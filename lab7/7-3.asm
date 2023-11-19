@@ -55,6 +55,32 @@
 ; CONFIG7H
   CONFIG  EBTRB = OFF           ; Boot Block Table Read Protection bit (Boot block (000000-0007FFh) not protected from table reads executed in other blocks)
   
+; Total_cycles = 2 + (2 + 7 * num1 + 2) * num2 * 4 cycles
+; num1 = 200, num2 = 90, Total_cycles = 505442
+; Total_delay ~= Total_cycles/1M = 0.5s
+L1 EQU 0x14
+L2 EQU 0x15
+DELAY macro num1, num2 
+    local LOOP1         ; innerloop
+    local LOOP2         ; outerloop
+    MOVLW num2          ; 2 cycles
+    MOVWF L2
+    LOOP2:
+	MOVLW num1          ; 2 cycles
+	MOVWF L1
+    LOOP1:                 ; 7 cycles
+	NOP
+	NOP
+	NOP
+	NOP
+	NOP
+	NOP
+	DECFSZ L1, 1
+	BRA LOOP1
+	DECFSZ L2, 1        ; 2 cycles
+	BRA LOOP2
+endm
+	
   org 0x00
   CLRF 0x00
   GOTO initial
@@ -72,17 +98,19 @@
     INCF 0x00
     MOVLW d'6'
     CPFSGT 0x00 ;if state >6, reset state = 1
-	RETURN
-    MOVLW d'1'
-    MOVWF 0x00
+	DELAY d'200', d'18' ;delay 0.1s
+    CPFSGT 0x00 ;if state >6, reset state = 1
+	GOTO OK
+    CLRF 0x00 ;???????????????????????????????why
+    INCF 0x00 ;???????????????????
+    OK:
     RETURN
     
   timer:
-    BTFSS 0x00, 0 ;if stete is odd, skip next line
-	DECF 0x01
-    BTFSC 0x00, 0 ;if stete is even, skip next line
-	INCF 0x01
-    MOVFF 0x001, LATA
+    BTFSS 0x00, 0 ;if state is odd, skip next line
+	DECF LATA
+    BTFSC 0x00, 0 ;if state is even, skip next line
+	INCF LATA
     BCF PIR1, TMR2IF        ; clean up TMR2IF(flag bit)
     RETURN
     
@@ -90,8 +118,7 @@
     ;reset state
     MOVLW d'1'
     MOVWF 0x00
-    ;reset conter
-    CLRF 0x01
+
     ;setting ADCON1 is digital
     MOVLW 0x0F
     MOVWF ADCON1
@@ -155,6 +182,8 @@
 	MOVWF PR2
 	GOTO end_main
 	not_6:
+	MOVLW 0x06
+	SUBWF  0x00,F ;reset counter to 1
     end_main:
 	GOTO main
   end
