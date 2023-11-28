@@ -29,15 +29,16 @@ void __interrupt(high_priority) H_ISR() //press button
         for(int i=counter; i<= 0b0001001011; i++)
         {
              //Duty cycle
-            CCPR1L = i & 0b1111111100;
+            CCPR1L = (i & 0b1111111100) >> 2; //CCPR1L is 8 bit!
             CCP1CONbits.DC1B = i & 0b0000000011;
+            __delay_ms(1);
         } 
         
         //reset Duty cycle
         CCPR1L = 0x04;
         CCP1CONbits.DC1B = 0b00;
         
-        __delay_ms(500);
+        __delay_ms(50);
         INTCONbits.INT0IF = 0;
     }
    

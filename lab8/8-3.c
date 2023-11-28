@@ -32,15 +32,19 @@ void __interrupt(high_priority) H_ISR() //press button
             for(int i=counter; i<= counter2; i++)
             {
                  //Duty cycle
-                CCPR1L = i & 0b1111111100;
+                CCPR1L = (i & 0b1111111100) >> 2; //CCPR1L is 8 bit!
                 CCP1CONbits.DC1B = i & 0b0000000011;
+                __delay_ms(3);
             } 
+            
             for(int i=counter2; i>= counter; i--)
             {
                 //Duty cycle
-                CCPR1L = i & 0b1111111100;
+                CCPR1L = (i & 0b1111111100) >> 2; //CCPR1L is 8 bit!
                 CCP1CONbits.DC1B = i & 0b0000000011;
+                __delay_ms(3);
             } 
+            
         }
     }
    
