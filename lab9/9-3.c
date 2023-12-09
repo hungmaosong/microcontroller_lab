@@ -14,30 +14,24 @@ int value;
 void __interrupt(high_priority) H_ISR()
 {
     //step4   
-    value = ADRESL + (ADRESH * 256);
+    value = (ADRESL + (ADRESH << 8)) >> 3 ; //100% = 0x80 0% = 0x00
     //Duty cycle
     CCPR1L = value >> 2;
     CCP1CONbits.DC1B = value;
-
-    for(int i=0; i<= value; i++) //in duty cycle, light on
-    {
-        LATA = 0b00011110;
-    }
-    LATA = 0b00000000;
-    //clear flag bit
-    PIR1bits.ADIF = 0;
-    
     
     //step5 & go back step3
     
     //delay at least 2tad
-     __delay_us(100);
+     __delay_us(2);
+    //clear flag bit
+    PIR1bits.ADIF = 0;
     ADCON0bits.GO = 1;
     
     
     return;
 }
-void main(void)
+
+void PWM()
 {
     ///////////////////////////PWM///////////////////////////////
     // Timer2 -> On, prescaler -> 4
@@ -50,7 +44,7 @@ void main(void)
     // PWM mode, P1A, P1C active-high; P1B, P1D active-high
     CCP1CONbits.CCP1M = 0b1100;
     
-    // CCP1/RC2 -> Output
+    // CCP1/RC2 -> Output => output = LED(pin 17 on pic 18)!!!!!!!!!!!!!!!!!!!!!!!!!!!
     TRISC = 0;
     LATC = 0;
     
@@ -66,11 +60,10 @@ void main(void)
     //Duty cycle
     CCPR1L = 0x00;
     CCP1CONbits.DC1B = 0b00;    
-    
-    RCONbits.IPEN = 0; //INT priority disable
-    INTCONbits.GIE = 1; //General INT enable
-    //INTCONbits.PEIE = 0; //Peripheral INT disable
+}
 
+void variable_resistor()
+{
     ///////////////////////////variable resistor///////////////////////////////
     //configure OSC and port
     OSCCONbits.IRCF = 0b001; // Internal Oscillator Frequency, Fosc = 125 kHz, Tosc = 8 µs
@@ -85,26 +78,22 @@ void main(void)
     ADCON2bits.ACQT = 0b001;  //Tad = 2 us acquisition time = 2Tad = 4 > 2.4
     ADCON0bits.ADON = 1;
     ADCON2bits.ADFM = 1;    //right justified = 1
-    
-    
+     
     //step2
     PIE1bits.ADIE = 1; //set enable
     PIR1bits.ADIF = 0; //clear flag bit
     INTCONbits.PEIE = 1; //set peripheral interrupt
     INTCONbits.GIE = 1; //set global interrupt
 
-
     //step3
     ADCON0bits.GO = 1; //start to ADC
-    
-    //set led
-    TRISAbits.RA1 = 0;
-    TRISAbits.RA2 = 0;
-    TRISAbits.RA3 = 0;
-    TRISAbits.RA4 = 0;
-    LATA = 0b00000000;
-    
-    value = 0;
+}
+
+void main(void)
+{
+    PWM();
+    variable_resistor();
+
     while(1);
     return;
 }
