@@ -1,4 +1,5 @@
 #include <xc.h>
+#include <string.h>
     //setting TX/RX
 
 char mystring[20];
@@ -61,10 +62,16 @@ void MyusartRead()
     /* TODObasic: try to use UART_Write to finish this function */
     mystring[lenStr] = RCREG;
     UART_Write(mystring[lenStr]);
+    
+    if(mystring[lenStr] == '\r'){
+        UART_Write('\n');
+    }
+    
     lenStr++;
     if(lenStr >= 20){ //reset length
         lenStr = 0;
     }
+    
     return ;
 }
 
