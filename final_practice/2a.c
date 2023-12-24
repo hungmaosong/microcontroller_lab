@@ -1,5 +1,6 @@
 #include <xc.h>
 #include <stdlib.h>
+#include <pic18f4520.h>
 #include "stdio.h"
 #include "string.h"
 
@@ -60,173 +61,150 @@
 
 // #pragma config statements should precede project file includes.
 // Use project enums instead of #define for ON and OFF.
+#define _XTAL_FREQ 4000000 //for delay!!!!!!!!!!!!!!!!!!!!
+int n;
+int cycle;
+int state;
+int duty;
+int counter; //for delay 1s
 
-char str[20];
-char mystring[20];
-int lenStr = 0;
-
-int count = 0;
-int mode = 15; //use for timer2 loop
-
-void timer2_initialize(){
-    INTCONbits.GIE = 1; //open global interrupt
-    INTCONbits.PEIE = 1; //open peripheral interrupt
-    PIE1bits.TMR2IE = 1; //open timer2 enable
-    PIR1bits.TMR2IF = 0; //clean flag bit
-    IPR1bits.TMR2IP = 1; //timer2 is high priority !!!!
-    RCONbits.IPEN = 1; //enable priority!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    TMR2 = 0; //Clear TMR2 register to 0
-    /*Initialize PR2 and T2CON registers with appropriate data.*/
-    PR2 = 255;
-    T2CONbits.T2OUTPS = 0b1111; //postscaler = 1:16
-    T2CONbits.T2CKPS = 0b10; //prescaler = 1:16
-    OSCCONbits.IRCF = 0b110; //Fosc = 4Mhz
-    /*
-     * Delay = inst.cycle * post * pre * (PR2+1) = 1us * 16 * 16 * 256 = 65.536us
-     * 1s = 15 loop Delay (count = 15)
-     */
-    T2CONbits.TMR2ON = 1; //open timer2
-}
-
-void UART_Initialize() {
-           
-    /*       TODObasic   
-           Serial Setting      
-        1.   Setting Baud rate
-        2.   choose sync/async mode 
-        3.   enable Serial port (configures RX/DT and TX/CK pins as serial port pins)
-        3.5  enable Tx, Rx Interrupt(optional)
-        4.   Enable Tx & RX
-    */
-    
-    TRISCbits.TRISC6 = 1;            
-    TRISCbits.TRISC7 = 1;            
-    
-    //  Setting baud rate =1200
-    OSCCONbits.IRCF = 0b110; //FOSC = 4MHZ
-    TXSTAbits.SYNC = 0;           
-    BAUDCONbits.BRG16 = 0;          
-    TXSTAbits.BRGH = 0;
-    SPBRG = 51;      
-    
-   //   Serial enable
-    RCSTAbits.SPEN = 1;              
-    PIR1bits.TXIF = 1; //will set when TXREG is empty
-    PIR1bits.RCIF = 0; //will set when reception is complete
-    TXSTAbits.TXEN = 1;           
-    RCSTAbits.CREN = 1; //continuous receive enable bit, will be cleared when error occurred          
-    PIE1bits.TXIE = 1;       
-    IPR1bits.TXIP = 0; //EUSART Transmit Interrupt Priority bit   !!!!        
-    PIE1bits.RCIE = 1;              
-    IPR1bits.RCIP = 1; //EUSART receive Interrupt Priority bit  !!!! 
-              
-    }
-
-void UART_Write(unsigned char data)  // Output on Terminal
+void __interrupt(high_priority) High_interrupt(void) //button pressed
 {
-    while(!TXSTAbits.TRMT);
-    TXREG = data;              //write to TXREG will send data 
-}
-
-
-void UART_Write_Text(char* text) { // Output on Terminal, limit:10 chars
-    for(int i=0;text[i]!='\0';i++)
-        UART_Write(text[i]);
-}
-
-void ClearBuffer(){
-    for(int i = 0; i < 10 ; i++)
-        mystring[i] = '\0';
-    lenStr = 0;
-}
-
-void MyusartRead()
-{
-    /* TODObasic: try to use UART_Write to finish this function */
-    mystring[lenStr] = RCREG;
-    UART_Write(mystring[lenStr]);
-    
-    if(mystring[lenStr] == '\r'){
-        UART_Write('\n');
-    }
-    
-    lenStr++;
-    if(lenStr >= 20){ //reset length
-        lenStr = 0;
-    }
-    
-    return ;
-}
-
-char *GetString(){
-    return mystring;
-}
-
-void __interrupt(high_priority) high_interrupt(){
-    strcpy(str, GetString()); // TODO : GetString() in uart.c
-    if(str[0]=='0' && str[1]=='\r'){
-        mode = 15; //1s
-        count = 0;
-        ClearBuffer();
-    }
-    else if(str[0]=='1' && str[1]=='\r'){
-        mode = 7; //0.5s
-        count = 0;
-        ClearBuffer();  
-    }
-    else if(str[0]=='2' && str[1]=='\r'){
-        mode = 4; //0.25s
-        count = 0;
-        ClearBuffer();  
-    }
-    
-    if(count == mode){
-        count = 0;
-        if(LATA == 0b00000001){
-            LATA = 0b00000010;
+    if(INTCONbits.INT0IF == 1){
+        if(LATA >= n){
+            cycle = 1;
+            LATA = 1;
         }
         else{
-            LATA = 0b00000001;
-        }
-        PIR1bits.TMR2IF = 0;
-    }
-    else
-    {
-        count++;
-        PIR1bits.TMR2IF = 0;
-    }
-}
-
-void __interrupt(low_priority)  low_interrup(void)
-{
-    if(RCIF)
-    {
-        if(RCSTAbits.OERR)
-        {
-            CREN = 0;
-            Nop();
-            CREN = 1;
+            cycle++;
+            LATA++;
         }
         
-        MyusartRead();
-    }
+        //reset degree to 0
+        CCPR1L = 11; //0-255
+        CCP1CONbits.DC1B = 0b01; //00 01 10 11
+        state = 0;
     
+        __delay_ms(10);
+        INTCONbits.INT0IF = 0;
+    }
+
 }
 
-void main(void) {
+void __interrupt(low_priority) Low_interrupt(void) 
+{
+    if(PIR1bits.TMR2IF){
+        if(counter == 50){
+            counter = 0;
+            switch(state){
+                case 0:
+                    //degree = 0
+                    CCPR1L = 11; //0-255
+                    CCP1CONbits.DC1B = 0b01; //00 01 10 11
+                    state = 1;
+                    break;
+                case 1:
+                    //degree = cycle * (-90/n)
+                    duty = (cycle * (-90/n) + 137) / 3;
+                    CCPR1L = duty >> 2; //0-255
+                    CCP1CONbits.DC1B = duty; //00 01 10 11
+
+                    state = 2;
+                    break;
+                case 2:
+                    //degree = 0
+                    CCPR1L = 11; //0-255
+                    CCP1CONbits.DC1B = 0b01; //00 01 10 11
+                    state = 3;
+                    break;
+                case 3:
+                    //degree = cycle * (90/n)
+                    duty = (cycle * (90/n) + 137) / 3;
+                    CCPR1L = duty >> 2; //0-255
+                    CCP1CONbits.DC1B = duty; //00 01 10 11
+                    
+                    state = 0;
+                    break;
+            }
+            PIR1bits.TMR2IF = 0;
+        }
+        else{
+            counter++;
+            PIR1bits.TMR2IF = 0;
+        }     
+        
+    }
+}
+
+void button_initial(){
+    INTCONbits.GIE = 1; //open global interrupt
+    INTCONbits.PEIE = 1; //open peripheral interrupt
+    TRISBbits.RB0 = 1; //RB0/INT0 is input for button
+    
+    INTCONbits.INT0IE = 1; //enable
+    INTCONbits.INT0IF = 0; //flag = 0
+}
+
+void LED_initial(){
     ADCON1 = 0x0F; //post A is digital IO (only A,B,E need to set)
     TRISAbits.RA0 = 0; //output
     TRISAbits.RA1 = 0; //output
+    TRISAbits.RA2 = 0; //output
+    TRISAbits.RA3 = 0; //output
+    LATA = 1; //turn on LED
+}
+
+void PWM_initial(){    
+    IPR1bits.TMR2IP = 0; //low priority
+    PIE1bits.TMR2IE = 1;
+    PIR1bits.TMR2IF = 0;
+    TMR2 = 0;
     
-    LATA = 0b00000001; //initialize LED
+    // Timer2 -> On, prescaler -> 4
+    T2CONbits.TMR2ON = 0b1;
+    T2CONbits.T2CKPS = 0b01;
     
-    timer2_initialize() ;
-    UART_Initialize();
+    // Internal Oscillator Frequency, Fosc = 125 kHz, Tosc = 8 탎
+    OSCCONbits.IRCF = 0b001;
     
-    while(1)
-    {
-        ;
-    }
-           
+    // PWM mode, P1A, P1C active-high; P1B, P1D active-high
+    CCP1CONbits.CCP1M = 0b1100;
+    
+    // CCP1/RC2 -> Output
+    TRISC = 0;
+    LATC = 0;
+    
+    // Set up PR2, CCP to decide PWM period and Duty Cycle
+    /** 
+     * PWM period
+     * = (PR2 + 1) * 4 * Tosc * (TMR2 prescaler)
+     * = (0x9b + 1) * 4 * 8탎 * 4
+     * = 0.019968s ~= 20ms
+     */
+    PR2 = 0x9b;
+    
+    //Duty cycle -> initial: degree 0
+    /**
+     * Duty cycle
+     * = (CCPR1L:CCP1CON<5:4>) * Tosc * (TMR2 prescaler)
+     * = (0x0b*4 + 0b01) * 8탎 * 4
+     * = 0.00144s ~= 1450탎
+     */
+    CCPR1L = 11; //0-255
+    CCP1CONbits.DC1B = 0b01; //00 01 10 11
+}
+
+void main(void){
+    RCONbits.IPEN = 1;
+    
+    button_initial();
+    LED_initial();
+    PWM_initial();
+
+    n = 9;
+    state = 0;
+    cycle = 1;
+    counter = 0;
+    while(1);
     return;
 }
